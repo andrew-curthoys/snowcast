@@ -1,6 +1,6 @@
 year = 2021
 
-bouy_data_loc = {
+buoy_data_loc = {
     'base_site': 'https://www.ndbc.noaa.gov/',
     'standard_meterological_data': 'stdmet',
     'spectral_wave_density_data': 'swden',
