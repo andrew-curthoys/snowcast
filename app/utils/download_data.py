@@ -16,7 +16,7 @@ class Downloader:
 		self.year = cfg.year
 		self.buoy_base_url = cfg.buoy_data_meta['base_url']
 
-	def buoy_current_year_dl(self, buoy_id: str, report_type: str = 'stdmet'):
+	def buoy_dl_current_year(self, buoy_id: str, report_type: str = 'stdmet'):
 		"""Downloads all data for the current year
 		
 		Arguments:
@@ -34,7 +34,7 @@ class Downloader:
 			query = self.build_query(data_str, table, buoy_id=buoy_id)
 			self.write_to_db(query)
 
-	def buoy_previous_years_dl(self, buoy_id: str, report_type: str = 'stdmet'):
+	def buoy_dl_previous_years(self, buoy_id: str, report_type: str = 'stdmet'):
 		"""Downloads all data for every year previous to current
 		
 		Arguments:
@@ -52,7 +52,7 @@ class Downloader:
 			query = self.build_query(data_str, table, buoy_id=buoy_id)
 			self.write_to_db(query)
 	
-	def get_snow_station_data(self):
+	def snow_dl_station_metadata(self):
 		"""Gets metadata for all snow stations & uploads to SQLite
 		"""
 		table = 'snow_stations'
@@ -61,6 +61,9 @@ class Downloader:
 		data = response.text
 		query = self.build_query(data, table)
 		self.write_to_db(query)
+	
+	def snow_dl_data(self):
+		
 			
 	def get_site_content(self, dl_url: str) -> str:
 		"""Fetches data from the given url
@@ -156,4 +159,4 @@ class Downloader:
 if __name__ == '__main__':
 	dler = Downloader()
 	# dler.buoy_current_year_dl('51001', 'stdmet')
-	dler.get_snow_station_data()
+
