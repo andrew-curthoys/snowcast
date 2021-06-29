@@ -63,7 +63,11 @@ class Downloader:
 		self.write_to_db(query)
 	
 	def snow_dl_data(self):
+		"""Downloads data for a given snow station
 		
+		Arguments:
+			station_id: The station ID of the snow station to download data from
+		"""
 			
 	def get_site_content(self, dl_url: str) -> str:
 		"""Fetches data from the given url
