@@ -51,7 +51,7 @@ buoy_data = {
     'supplemental_info':
         """
         FOREIGN KEY (STATION_ID)
-        REFERENCES buoys (STATION)
+        REFERENCES buoys (STATION_ID)
             ON UPDATE CASCADE
             ON UPDATE CASCADE
         """
@@ -76,9 +76,23 @@ buoys = {
 
 snow_data = {
     'cols': {
-        'date': 'TEXT',
-        'snowfall': 'TEXT'
-    }
+        'GHCNID': 'TEXT',
+        'POINT_ID': 'TEXT PRIMARY KEY',
+        'DATE': 'TEXT',
+        'MEASUREMENT_DSC': 'TEXT',
+        'VALUE': 'TEXT',
+        'MEASUREMENT_FLAG': 'TEXT',
+        'QUALITY_FLAG': 'TEXT',
+        'SOURCE_FLAG': 'TEXT',
+        'OBS_TIME': 'TEXT'
+    },
+    'supplemental_info':
+        """
+        FOREIGN KEY (GHCNID)
+        REFERENCES snow_stations (GHCNID)
+            ON UPDATE CASCADE
+            ON UPDATE CASCADE
+        """
 }
 
 snow_stations = {
