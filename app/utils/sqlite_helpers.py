@@ -1,5 +1,6 @@
-from config import table_dict
+from utils.config import table_dict
 from os import PathLike
+from pandas import read_sql_query
 from pathlib import Path
 from typing import Union
 from collections import namedtuple
@@ -17,21 +18,16 @@ class SQLUtil:
         # TODO: build SQL insert statement for inserting data
         pass
     
-    def read_data(self, file_path: Union[str, PathLike], table: str):
+    def read_data(self, query: str):
         """
-        Read data from a file & store in a data structure
+        Read data from a db & return it as a Pandas df
 
         Args:
-            file_path: file path for the data to be read
-            table: table where the data will be loaded
+            query: query to run & return data
         """
-        # Create a named tuple to store the data to upload into a table 
-        DataRow = namedtuple('DataRow', [key for key in table_dict[table]['cols']])
-        with open(file_path, newline='') as f:
-            reader = csv_reader(f, delimiter=',')
-            for row in reader:
-                data_row = DataRow(row)
-                self.data.append(data_row)
+        with sqlite3.connect(self.db_path) as conn:
+            df = read_sql_query(query, conn)
+            return df
 
     def make_table(self, table: str):
         """
@@ -58,3 +54,7 @@ class SQLUtil:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute(query)
+
+if __name__ == '__main__':
+    sql_util = SQLUtil('/home/andrew-curthoys/Documents/Projects/snowcast/data/snowcast.db')
+    sql_util.make_table('snow_stations')

@@ -1,7 +1,7 @@
 year = 2021
 
-buoy_data_loc = {
-    'base_site': 'https://www.ndbc.noaa.gov/',
+buoy_data_meta = {
+    'base_url': 'https://www.ndbc.noaa.gov/',
     'standard_meterological_data': 'stdmet',
     'spectral_wave_density_data': 'swden',
     'spectral_wave_alpha1_direction_data': 'swdir',
@@ -19,7 +19,10 @@ def buoy_data_months():
         yield months[i]
         i += 1
     
-snow_data_site = {}
+snow_data_meta = {
+    'base_url': 'https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt',
+    'station_col_idx': [0, 11, 20, 30, 37, 40, 71, 75, 79, 85]
+}
 
 buoy_data = {
     'cols': {
@@ -48,7 +51,7 @@ buoy_data = {
     'supplemental_info':
         """
         FOREIGN KEY (STATION_ID)
-        REFERENCES buoys (STATION)
+        REFERENCES buoys (STATION_ID)
             ON UPDATE CASCADE
             ON UPDATE CASCADE
         """
@@ -57,34 +60,52 @@ buoy_data = {
 buoys = {
     'cols': {
         'STATION_ID': 'TEXT PRIMARY KEY',
-        'latitude': 'TEXT',
-        'longitude': 'TEXT',
-        'name': 'TEXT',
-        'owner': 'TEXT',
-        'pgm': 'TEXT',
-        'type': 'TEXT',
-        'met': 'TEXT',
-        'currents': 'TEXT',
-        'waterquality': 'TEXT',
-        'dart': 'TEXT'
+        'LATITUDE': 'TEXT',
+        'LONGITUDE': 'TEXT',
+        'NAME': 'TEXT',
+        'OWNER': 'TEXT',
+        'PGM': 'TEXT',
+        'TYPE': 'TEXT',
+        'MET': 'TEXT',
+        'CURRENTS': 'TEXT',
+        'WATER_QUALITY': 'TEXT',
+        'DART': 'TEXT'
     }
 }
 
 
 snow_data = {
     'cols': {
-        'date': 'TEXT',
-        'snowfall': 'TEXT'
-    }
+        'GHCNID': 'TEXT',
+        'POINT_ID': 'TEXT PRIMARY KEY',
+        'DATE': 'TEXT',
+        'MEASUREMENT_DSC': 'TEXT',
+        'VALUE': 'TEXT',
+        'MEASUREMENT_FLAG': 'TEXT',
+        'QUALITY_FLAG': 'TEXT',
+        'SOURCE_FLAG': 'TEXT',
+        'OBS_TIME': 'TEXT'
+    },
+    'supplemental_info':
+        """
+        FOREIGN KEY (GHCNID)
+        REFERENCES snow_stations (GHCNID)
+            ON UPDATE CASCADE
+            ON UPDATE CASCADE
+        """
 }
 
 snow_stations = {
     'cols': {
-        'ghcnid': 'TEXT',
-        'station_name': 'TEXT',
-        'state': 'TEXT',
-        'county': 'TEXT',
-        'elev': 'TEXT'
+        'GHCNID': 'TEXT PRIMARY KEY',
+        'LATITUDE': 'REAL',
+        'LONGITUDE': 'REAL',
+        'ELEV': 'REAL',
+        'STATE': 'TEXT',
+        'STATION_NAME': 'TEXT',
+        'GSN_FLAG': 'TEXT',
+        'HCN_CRN_FLAG': 'TEXT',
+        'WMO_ID': 'TEXT'
     }
 }
 
