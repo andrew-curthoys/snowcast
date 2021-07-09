@@ -45,8 +45,8 @@ class Downloader:
 		table = 'buoy_data'
 		current_year = datetime.now().year
 		for yr in range(current_year-1, 1900, -1):
-			dl_url = self.buoy_base_url + f'data/historical/{report_type}/{buoy_id}h{yr}.txt.gz'
-			data_str = self.get_site_content(dl_url)
+			url = self.buoy_base_url + f'data/historical/{report_type}/{buoy_id}h{yr}.txt.gz'
+			data_str = self.get_site_content(url)
 			if data_str == 404:
 				break
 			query = self.build_query(data_str, table, buoy_id=buoy_id)
@@ -62,12 +62,19 @@ class Downloader:
 		query = self.build_query(data, table)
 		self.write_to_db(query)
 	
-	def snow_dl_data(self):
+	def snow_dl_data(self, snow_station_id: str):
 		"""Downloads data for a given snow station
 		
 		Arguments:
 			station_id: The station ID of the snow station to download data from
 		"""
+		table = 'snow_data'
+		url = f'https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/by_station/{snow_station_id}.csv.gz'
+		data_str = self.get_site_content(url)
+		if data_str == 404:
+			raise Exception('Error downloading file. Please check URL & snow station ID')
+		query = self.build_query(data_str, table, snow_station_id=snow_station_id)
+		self.write_to_db(query)
 			
 	def get_site_content(self, dl_url: str) -> str:
 		"""Fetches data from the given url
@@ -102,14 +109,22 @@ class Downloader:
 		# Build values portion of query
 		data = data_str.split('\n')
 		query_vals = ""
+		kwarg_dict = {}
 		if table == 'buoy_data':
-			buoy_id = kwargs.get('buoy_id')
-			if not buoy_id:
+			kwarg_dict['buoy_id'] = kwargs.get('buoy_id')
+			start_row = 2
+			if not kwarg_dict['buoy_id']:
 				raise Exception('Input error: User must supply a buoy ID to the `build_query()` method')
-		else:
-			buoy_id = None
-		for row in data[:len(data) - 1]:
-			row = self.parse_row(table, row, buoy_id=buoy_id)
+		elif table == 'snow_data':
+			kwarg_dict['snow_station_id'] = kwargs.get('snow_station_id')
+			start_row = 0
+			if not kwarg_dict['snow_station_id']:
+				raise Exception('Input error: User must supply a snow station ID to the `build_query()` method')
+
+		for row in data[start_row:len(data) - 1]:
+			row = self.parse_row(table, row, kwarg_dict)
+			if not row:
+				continue
 			query_vals += row + ','
 
 		# Remove last comma from the list
@@ -122,25 +137,31 @@ class Downloader:
 		"""
 		return query
 	
-	def parse_row(self, table: str, row: str, **kwargs) -> str:
+	def parse_row(self, table: str, row: str, kwarg_dict: dict) -> str:
 		"""Parses a row from raw string format to a format for loading to SQLite
 
 		Arguments:
 			table: the table to load the data to
 			row: the raw string of the row
+			kwarg_dict: a dictionary of values to use while parsing depending on the table
 		"""
 		if table == 'buoy_data':
 			row = row.strip().split()
-			buoy_id = kwargs.get('buoy_id')
+			buoy_id = kwarg_dict.get('buoy_id')
 			date = '-'.join(row[:3]) + ' ' + ':'.join(row[3:5]) + ':00'
-			guid = buoy_id + re.sub('-|:| ', '', date)
-			row.insert(0, guid)
+			point_id = buoy_id + re.sub('-|:| ', '', date)
+			row.insert(0, point_id)
 			row.insert(0, buoy_id)
 			row.insert(7, date)
+		elif table == 'snow_data':
+			row = row.strip().split(',')
+			if row[2] != 'SNOW':
+				return
+			point_id = row[0] + row[1]
+			row.insert(1, point_id)
 		elif table == 'snow_stations':
 			str_idx = cfg.snow_data_meta['station_col_idx']
 			row = [row[str_idx[i]:str_idx[i+1]].strip() for i in range(len(str_idx) -1)]
-
 		row = re.sub('\[', '(', str(row))
 		row = re.sub('\]', ')', row)
 
@@ -155,12 +176,10 @@ class Downloader:
 		db_file = Path(__file__).parent.parent.parent / 'data/snowcast.db'
 		with sqlite3.connect(db_file) as conn:
 			cursor = conn.cursor()
-			with open('sample.txt', 'w') as f:
-				f.write(query)
 			cursor.execute(query)
 
 
 if __name__ == '__main__':
 	dler = Downloader()
-	# dler.buoy_current_year_dl('51001', 'stdmet')
-
+	dler.snow_dl_data('USC00420072')
+	# dler.buoy_dl_current_year('51001', 'stdmet')
