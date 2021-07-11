@@ -159,6 +159,8 @@ class Downloader:
 				return
 			point_id = row[0] + row[1]
 			row.insert(1, point_id)
+			date = row[2][:4] + '-' + row[2][4:6] + '-' + row[2][6:] + ' 00:00:00'
+			row[2] = date
 		elif table == 'snow_stations':
 			str_idx = cfg.snow_data_meta['station_col_idx']
 			row = [row[str_idx[i]:str_idx[i+1]].strip() for i in range(len(str_idx) -1)]
@@ -183,3 +185,4 @@ if __name__ == '__main__':
 	dler = Downloader()
 	dler.snow_dl_data('USC00420072')
 	# dler.buoy_dl_current_year('51001', 'stdmet')
+	# dler.buoy_dl_previous_years('51001', 'stdmet')
