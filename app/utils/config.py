@@ -27,7 +27,7 @@ snow_data_meta = {
 buoy_data = {
     'cols': {
         'STATION_ID': 'TEXT',
-        'POINT_ID': 'TEXT PRIMARY_KEY',
+        'POINT_ID': 'TEXT PRIMARY KEY',
         'YEAR': 'INTEGER',
         'MONTH': 'INTEGER',
         'DAY': 'INTEGER',
