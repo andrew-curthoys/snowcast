@@ -18,7 +18,7 @@ class SQLUtil:
         # TODO: build SQL insert statement for inserting data
         pass
     
-    def read_data(self, query: str):
+    def read_data(self, query: str, **kwargs):
         """
         Read data from a db & return it as a Pandas df
 
@@ -26,7 +26,7 @@ class SQLUtil:
             query: query to run & return data
         """
         with sqlite3.connect(self.db_path) as conn:
-            df = read_sql_query(query, conn)
+            df = read_sql_query(query, conn, **kwargs)
             return df
 
     def make_table(self, table: str):
@@ -57,4 +57,5 @@ class SQLUtil:
 
 if __name__ == '__main__':
     sql_util = SQLUtil('/home/andrew-curthoys/Documents/Projects/snowcast/data/snowcast.db')
-    sql_util.make_table('snow_stations')
+    # sql_util.make_table('snow_stations')
+    sql_util.read_data("SELECT * FROM snow_data", parse_dates=['DATE'])
