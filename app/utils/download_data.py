@@ -131,10 +131,10 @@ class Downloader:
 		query_vals = query_vals[:len(query_vals) - 1]
 
 		query = f"""
-		INSERT INTO {table} {col_names}
+		INSERT OR REPLACE INTO {table} {col_names}
 		VALUES
 			{query_vals};
-		"""
+		""" 
 		return query
 	
 	def parse_row(self, table: str, row: str, kwarg_dict: dict) -> str:
@@ -184,5 +184,5 @@ class Downloader:
 if __name__ == '__main__':
 	dler = Downloader()
 	dler.snow_dl_data('USC00420072')
-	# dler.buoy_dl_current_year('51001', 'stdmet')
-	# dler.buoy_dl_previous_years('51001', 'stdmet')
+	dler.buoy_dl_current_year('51001', 'stdmet')
+	dler.buoy_dl_previous_years('51001', 'stdmet')
