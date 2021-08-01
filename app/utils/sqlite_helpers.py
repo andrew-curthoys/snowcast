@@ -57,5 +57,4 @@ class SQLUtil:
 
 if __name__ == '__main__':
     sql_util = SQLUtil('/home/andrew-curthoys/Documents/Projects/snowcast/data/snowcast.db')
-    # sql_util.make_table('snow_stations')
-    sql_util.read_data("SELECT * FROM snow_data", parse_dates=['DATE'])
+    sql_util.make_table('buoys')
