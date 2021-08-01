@@ -1,20 +1,38 @@
 import requests
 import chardet
-from requests.models import Response
 import config as cfg
 import gzip
 import os
 import re
 import sqlite3
+import xml.etree.ElementTree as ET
 
 from datetime import datetime
 from pathlib import Path
+from pykml import parser
+from requests.models import Response
 from io import BytesIO
 
 class Downloader:
 	def __init__(self):
 		self.year = cfg.year
 		self.buoy_base_url = cfg.buoy_data_meta['base_url']
+
+	def buoy_dl_metadata(self, buoy_id=None):
+		"""Downloads metadata for all buoys or a specific buoy if
+		supplied
+		
+		Arguments:
+			buoy_id: Identification number of a buoy if you'd like
+			to add a specific buoy, otherwise it will download data
+			for all buoys
+		"""
+		table = 'buoys'
+		url = self.buoy_base_url + 'activestations.xml'
+		response = requests.get(url)
+		data_str = response.text
+		query = self.build_query(data_str, table)
+		self.write_to_db(query)
 
 	def buoy_dl_current_year(self, buoy_id: str, report_type: str = 'stdmet'):
 		"""Downloads all data for the current year
@@ -93,7 +111,7 @@ class Downloader:
 		"""Builds a query for inserting data into SQLite
 
 		Arguments
-			data_str: The data from the buoy in string format
+			data_str: The source data in string format
 			table: Name of the SQLite table to load the data
 		
 		Returns
@@ -106,8 +124,14 @@ class Downloader:
 			col_names += col + ','
 		col_names = col_names[:len(col_names) - 1] + ")"
 
+		# Get data as a list
+		if table == 'buoys':
+			data = ET.fromstring(data_str)
+			start_row = 0
+		else:
+			data = data_str.split('\n')
+
 		# Build values portion of query
-		data = data_str.split('\n')
 		query_vals = ""
 		kwarg_dict = {}
 		if table == 'buoy_data':
@@ -127,14 +151,19 @@ class Downloader:
 				continue
 			query_vals += row + ','
 
-		# Remove last comma from the list
-		query_vals = query_vals[:len(query_vals) - 1]
+		if table == 'buoys':
+			last_row = data[len(data) - 1]
+			row = self.parse_row(table, last_row, kwarg_dict)
+			query_vals += row
+		else:
+			# Remove last comma from the list
+			query_vals = query_vals[:len(query_vals) - 1]
 
 		query = f"""
 		INSERT OR REPLACE INTO {table} {col_names}
 		VALUES
 			{query_vals};
-		""" 
+		"""
 		return query
 	
 	def parse_row(self, table: str, row: str, kwarg_dict: dict) -> str:
@@ -153,6 +182,21 @@ class Downloader:
 			row.insert(0, point_id)
 			row.insert(0, buoy_id)
 			row.insert(7, date)
+		elif table == 'buoys':
+			buoy_cols = [
+				'id',
+				'lat',
+				'lon',
+				'name',
+				'owner',
+				'pgm',
+				'type',
+				'met',
+				'currents',
+				'waterquality',
+				'dart'
+			]
+			row = ['' if row.get(item) is None else row.get(item) for item in buoy_cols]
 		elif table == 'snow_data':
 			row = row.strip().split(',')
 			if row[2] != 'SNOW':
@@ -183,6 +227,7 @@ class Downloader:
 
 if __name__ == '__main__':
 	dler = Downloader()
-	dler.snow_dl_data('USC00420072')
-	dler.buoy_dl_current_year('51001', 'stdmet')
-	dler.buoy_dl_previous_years('51001', 'stdmet')
+	dler.buoy_dl_metadata()
+	# dler.snow_dl_data('USC00420072')
+	# dler.buoy_dl_current_year('51001', 'stdmet')
+	# dler.buoy_dl_previous_years('51001', 'stdmet')
