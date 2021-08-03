@@ -49,6 +49,12 @@ dler.buoy_dl_metadata()
 
 # Downloads data for a particular buoy
 dler.buoy_dl_metadata('51001')
+
+# Downloads metadata for all snow stations
+dler.snow_dl_station_metadata()
+
+# Downloads data for a particular snow station
+dler.snow_dl_station_metadata('USC00420072')
 ```
 Measurement data for buoys and snow stations can be downloaded for individual
 buoys or stations. Buoy data is stored by NOAA differently so different methods
